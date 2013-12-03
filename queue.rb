@@ -1,9 +1,8 @@
 class Queue
-  attr_reader :jobs, :structure
+  attr_reader :jobs
   def initialize(args={})
     args       = defaults.merge(args)
     @jobs      = args[:jobs].chars
-    @structure = args[:structure]
   end
 
   def defaults
@@ -17,7 +16,5 @@ class Queue
     end
     result.join('')
   end
-
-
 
 end
