@@ -37,7 +37,8 @@ class Queue
 
   private
 
-  def last_job_in_dependency(job, queued, job_start)
+  def last_job_in_dependency(job, queued, job_start, previous=[])
+    previous << job
     dependency = has_dependency(job)
     if dependency.nil? || queued.include?(dependency)
       # if we dont have a dependency or our dependency was added before, we return the job evaluated
@@ -45,7 +46,7 @@ class Queue
     else
       # we continue with the recursive call to the the rest of the dependencies if is not processed
       # before and if is not a ciruclar dependency
-      queued.include?(dependency) ? dependency : last_job_in_dependency(dependency, queued, job_start) if is_not_circular_dependency?(dependency, job_start)
+      queued.include?(dependency) ? dependency : last_job_in_dependency(dependency, queued, job_start, previous) if is_not_circular_dependency?(dependency, job_start, previous)
     end
   end
 
@@ -57,8 +58,11 @@ class Queue
     true
   end
 
-  def is_not_circular_dependency?(dependency, start_job)
-    raise CircularDependencyException if dependency == start_job
+  # we check circular dependencies in two ways:
+  # 1. started job with the current dependency
+  # 2. any previous job with current dependency
+  def is_not_circular_dependency?(dependency, start_job, previous)
+    raise CircularDependencyException if dependency == start_job || previous.include?(dependency)
     true
   end
 end

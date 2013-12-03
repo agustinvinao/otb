@@ -78,5 +78,20 @@ class QueueTest < Minitest::Test
     end
   end
 
-
+  # jobs
+  # a =>
+  # b => c
+  # c => f
+  # d => a
+  # e =>
+  # f => c
+  # new case where the circular dependency is not at the beginning of the cicle
+  # c => f - f => c
+  def test_circular_dependency_two
+    dependencies  = {'b' => 'c', 'c' => 'f', 'd' => 'a', 'f' => 'c'}
+    jobs          = 'abcdef'
+    assert_raises(CircularDependencyException) do
+      Queue.new({:jobs => jobs, :dependencies => dependencies}).run
+    end
+  end
 end
