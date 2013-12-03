@@ -17,4 +17,11 @@ class QueueTest < Minitest::Test
     assert_equal 'abc', queue.run
   end
 
+  def test_run_with_one_dependency
+    dependencies  = {'b' => 'c'}
+    jobs          = 'abc'
+    queue         = Queue.new({:jobs => jobs, :dependencies => dependencies})
+    assert_equal 'acb', queue.run
+  end
+
 end
