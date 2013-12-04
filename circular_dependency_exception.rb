@@ -1,2 +1,0 @@
-class CircularDependencyException < RuntimeError
-end

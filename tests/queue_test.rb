@@ -12,7 +12,8 @@ class QueueTest < Minitest::Test
   # a =>
   def test_run_for_single_job
     jobs          = 'a'
-    queue         = Queue.new({:jobs => jobs})
+    dependencies  = {'a' => nil}
+    queue         = Queue.new({:jobs => jobs, :dependencies => dependencies})
     assert_equal 'a', queue.run
   end
 
@@ -22,7 +23,8 @@ class QueueTest < Minitest::Test
   # c =>
   def test_run_for_tree_jobs_without_parents
     jobs          = 'abc'
-    queue         = Queue.new({:jobs => jobs})
+    dependencies  = {'a' => nil, 'b' => nil, 'c' => nil}
+    queue         = Queue.new({:jobs => jobs, :dependencies => dependencies})
     assert_equal 'abc', queue.run
   end
 
@@ -31,7 +33,7 @@ class QueueTest < Minitest::Test
   # b => c
   # c =>
   def test_run_with_one_dependency
-    dependencies  = {'b' => 'c'}
+    dependencies  = {'a' => nil, 'b' => 'c', 'c' => nil}
     jobs          = 'abc'
     queue         = Queue.new({:jobs => jobs, :dependencies => dependencies})
     assert_equal 'acb', queue.run
@@ -45,7 +47,7 @@ class QueueTest < Minitest::Test
   # e => b
   # f =>
   def test_run_with_many_dependencies
-    dependencies  = {'b' => 'c', 'c' => 'f', 'd' => 'a', 'e' => 'b'}
+    dependencies  = {'a' => nil, 'b' => 'c', 'c' => 'f', 'd' => 'a', 'e' => 'b', 'f' => nil}
     jobs          = 'abcdef'
     queue         = Queue.new({:jobs => jobs, :dependencies => dependencies})
     assert_equal 'afcbde', queue.run
@@ -56,9 +58,9 @@ class QueueTest < Minitest::Test
   # b =>
   # c => c
   def test_same_dependency
-    dependencies  = {'c' => 'c'}
+    dependencies  = {'a' => nil, 'b' => nil, 'c' => 'c'}
     jobs          = 'abc'
-    assert_raises(SameDependencyException) do
+    assert_raises(RuntimeError) do
       Queue.new({:jobs => jobs, :dependencies => dependencies}).run
     end
   end
@@ -71,9 +73,9 @@ class QueueTest < Minitest::Test
   # e =>
   # f => b
   def test_circular_dependency
-    dependencies  = {'b' => 'c', 'c' => 'f', 'd' => 'a', 'f' => 'b'}
+    dependencies  = {'a' => nil, 'b' => 'c', 'c' => 'f', 'd' => 'a', 'e' => nil, 'f' => 'b'}
     jobs          = 'abcdef'
-    assert_raises(CircularDependencyException) do
+    assert_raises(RuntimeError) do
       Queue.new({:jobs => jobs, :dependencies => dependencies}).run
     end
   end
@@ -88,9 +90,9 @@ class QueueTest < Minitest::Test
   # new case where the circular dependency is not at the beginning of the cycle
   # c => f - f => c
   def test_circular_dependency_two
-    dependencies  = {'b' => 'c', 'c' => 'f', 'd' => 'a', 'f' => 'c'}
+    dependencies  = {'a' => nil, 'b' => 'c', 'c' => 'f', 'd' => 'a', 'e' => nil, 'f' => 'c'}
     jobs          = 'abcdef'
-    assert_raises(CircularDependencyException) do
+    assert_raises(RuntimeError) do
       Queue.new({:jobs => jobs, :dependencies => dependencies}).run
     end
   end

@@ -1,2 +1,0 @@
-class SameDependencyException < RuntimeError
-end

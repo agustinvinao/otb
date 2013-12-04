@@ -1,54 +1,36 @@
-require 'circular_dependency_exception'
-require 'same_dependency_exception'
 class Queue
-  attr_reader :jobs, :dependencies
-
+  attr_reader :jobs, :dependencies, :result
   def initialize(args={})
     args          = defaults.merge(args)
-    @jobs         = args[:jobs].chars
+    @jobs         = args[:jobs]
     @dependencies = args[:dependencies]
+    @unvisited    = dependencies.keys
+    @marked       = []
   end
   def defaults
-    {:jobs => ''}
+    {:jobs => '', :dependencies => {}}
   end
 
   def run
-    return unless has_same_dependencies?
-
-    ordered_jobs = []
-    while jobs.size > 0
-      job = jobs[0]
-      unless (dependency = last_job_in_dependency(job, ordered_jobs, job)) == job
-        ordered_jobs << jobs.delete_at(jobs.index(dependency))
-      else
-        ordered_jobs << jobs.shift
-      end
+    @result    = []
+    while not unvisited.empty?
+      visit(unvisited.first)
     end
-    ordered_jobs.join('')
+    result.join('')
   end
 
   private
+  attr_reader :unvisited, :marked
+  def visit(job)
+    raise 'job self dependency'      if dependencies[job] == job
+    raise 'jobs circular dependency' if marked.include? job
 
-  def last_job_in_dependency(job, queued, job_start, previous=[])
-    previous << job
-    dependency = has_dependency?(job)
-    if dependency.nil? || queued.include?(dependency)
-      job
-    else
-      queued.include?(dependency) ? dependency : last_job_in_dependency(dependency, queued, job_start, previous) if is_not_circular_dependency?(dependency, job_start, previous)
+    if unvisited.include? job
+      @marked << job
+      visit dependencies[job] if not dependencies[job].nil?
+      @unvisited.delete job
+      @marked.delete job
+      @result << job
     end
-  end
-
-  def has_dependency?(job)
-    dependencies && dependencies.keys.include?(job) ? dependencies[job] : nil
-  end
-  def has_same_dependencies?
-    raise SameDependencyException if dependencies && dependencies.select{|k,v| k==v}.size > 0
-    true
-  end
-
-  def is_not_circular_dependency?(dependency, start_job, previous)
-    raise CircularDependencyException if dependency == start_job || previous.include?(dependency)
-    true
   end
 end
