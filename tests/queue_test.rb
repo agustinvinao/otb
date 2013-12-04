@@ -85,7 +85,7 @@ class QueueTest < Minitest::Test
   # d => a
   # e =>
   # f => c
-  # new case where the circular dependency is not at the beginning of the cicle
+  # new case where the circular dependency is not at the beginning of the cycle
   # c => f - f => c
   def test_circular_dependency_two
     dependencies  = {'b' => 'c', 'c' => 'f', 'd' => 'a', 'f' => 'c'}

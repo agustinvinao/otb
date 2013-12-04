@@ -39,7 +39,7 @@ class Queue
 
   def last_job_in_dependency(job, queued, job_start, previous=[])
     previous << job
-    dependency = has_dependency(job)
+    dependency = has_dependency?(job)
     if dependency.nil? || queued.include?(dependency)
       # if we dont have a dependency or our dependency was added before, we return the job evaluated
       job
@@ -50,7 +50,7 @@ class Queue
     end
   end
 
-  def has_dependency(job)
+  def has_dependency?(job)
     dependencies && dependencies.keys.include?(job) ? dependencies[job] : nil
   end
   def has_same_dependencies?
